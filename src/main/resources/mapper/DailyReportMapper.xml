@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.practice.mapper.DailyReportMapper">
+
+    <sql id="dailyReportFill">
+        dr.id,
+        dr.created_by,
+        dr.created_time,
+        dr.updated_by,
+        dr.updated_time,
+        dr.title,
+        dr.content,
+        dr.comment,
+        dr.relation_student_id,
+        dr.relation_teacher_id,
+        dr.relation_class_id
+    </sql>
+
+    <select id="getDailyReportList" resultType="com.practice.common.dto.DailyDto">
+        SELECT
+        <include refid="dailyReportFill"/>,
+        si.student_name
+        FROM
+        daily_report AS dr
+        INNER JOIN student_info AS si ON  si.id = dr.relation_student_id
+        <where>
+            dr.is_deleted=0
+            <if test="userId != null">
+                and dr.created_by = #{userId}
+            </if>
+            <if test="teacherId != null">
+                and dr.relation_teacher_id =#{teacherId}
+            </if>
+            <if test="relationClassId != null">
+                and dr.relation_class_id = #{relationClassId}
+            </if>
+            <if test="key != null and key != ''">
+                and (dr.title like concat('%',#{key},'%') or dr.content like concat('%',#{key},'%'))
+            </if>
+            <if test="classList != null and classList.size > 0">
+                and dr.relation_class_id in
+                <foreach item="id" collection="classList" separator="," open="(" close=")" index="">
+                    #{id}
+                </foreach>
+            </if>
+        </where>
+        order by dr.created_by desc
+        LIMIT #{offset},#{size}
+
+    </select>
+    <select id="getDailyReportListCount" resultType="java.lang.Integer">
+        SELECT
+        count(*)
+        FROM
+        daily_report AS dr
+        INNER JOIN student_info AS si ON si.id = dr.relation_student_id
+        <where>
+            dr.is_deleted=0
+            <if test="userId != null">
+                and  dr.created_by = #{userId}
+            </if>
+            <if test="teacherId != null">
+                and dr.relation_teacher_id = #{teacherId}
+            </if>
+            <if test="relationClassId != null">
+                and dr.relation_class_id = #{relationClassId}
+            </if>
+            <if test="key != null and key != ''">
+                and (dr.title like concat('%',#{key},'%') or dr.content like concat('%',#{key},'%'))
+            </if>
+            <if test="classList != null and classList.size > 0">
+                and dr.relation_class_id in
+                <foreach item="id" collection="classList" separator="," open="(" close=")" index="">
+                    #{id}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+</mapper>

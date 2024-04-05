@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.practice.mapper.DiscussInfoMapper">
+
+    <select id="getListPage" resultType="com.practice.common.dto.DiscussDto">
+        select d.*, ui.user_ava,IFNULL(ti.teacher_name, si.student_name) userName from discuss_info d
+        left join user_info ui on ui.id = d.created_by
+        left join teacher_info ti on ti.id = d.relation_teacher_id
+        left join student_info si on si.id = d.relation_student_id
+        <where>
+            d.is_deleted = 0 and d.relation_discuss_id = -1
+            <if test="relationClassId != null">
+                and d.relation_class_id = #{relationClassId}
+            </if>
+            <if test="teacherId != null and relationClassId == null">
+                and d.relation_class_id in
+                    (select id from class_info where relation_teacher_id = #{teacherId})
+            </if>
+        </where>
+        order by d.created_time desc
+        limit #{offset}, #{size}
+    </select>
+
+
+    <select id="getListPageCount" resultType="java.lang.Integer">
+        select count(*) from discuss_info d
+        <where>
+            d.is_deleted = 0 and d.relation_discuss_id = -1
+            <if test="relationClassId != null">
+                and d.relation_class_id = #{relationClassId}
+            </if>
+            <if test="teacherId != null and relationClassId == null">
+                and d.relation_class_id in
+                    (select id from class_info where relation_teacher_id = #{teacherId})
+            </if>
+        </where>
+    </select>
+
+    <select id="getReplyList" resultType="com.practice.common.dto.DiscussDto">
+        select d.*, ui.user_ava,IFNULL(ti.teacher_name, si.student_name) userName from discuss_info d
+        left join user_info ui on ui.id = d.created_by
+        left join teacher_info ti on ti.id = d.relation_teacher_id
+        left join student_info si on si.id = d.relation_student_id
+        where d.is_deleted = 0 and d.relation_discuss_id != -1 and d.relation_discuss_id = #{relationDiscussId}
+        order by d.created_time desc
+    </select>
+</mapper>

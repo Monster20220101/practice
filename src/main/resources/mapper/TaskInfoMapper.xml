@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.practice.mapper.TaskInfoMapper">
+    <update id="updateTaskStatusAuto">
+        update task_info set task_status = 0 where start_time-NOW()>0 and is_deleted=0;
+        update task_info set task_status = 1 where NOW()-start_time>=0 and end_time-NOW()>0 and is_deleted=0;
+        update task_info set task_status = 2 where NOW()-end_time>=0 and is_deleted=0;
+    </update>
+
+    <select id="getStudentScoreList" resultType="com.practice.common.dto.StudentWithScore">
+        select si.*, tg.score score from student_info si
+            left join task_grade tg on tg.relation_student_id = si.id and tg.relation_task_id = #{id}
+        <where>
+            <if test="relationClassId != null">
+                and si.relation_class_id = #{relationClassId}
+            </if>
+            <if test="key != null and key != ''">
+                and si.student_name like concat('%',#{key},'%')
+            </if>
+        </where>
+        limit #{offset},#{size}
+    </select>
+
+
+    <select id="getStudentScoreListCount" resultType="java.lang.Integer">
+        select count(*) from student_info si
+            left join task_grade tg on tg.relation_student_id = si.id and tg.relation_task_id = #{id}
+        <where>
+            <if test="relationClassId != null">
+                and si.relation_class_id = #{relationClassId}
+            </if>
+            <if test="key != null and key != ''">
+                and si.student_name like concat('%',#{key},'%')
+            </if>
+        </where>
+    </select>
+
+    <select id="getAvgScoreByTaskId" resultType="java.lang.Double">
+        select ROUND(AVG(score),2) from task_grade where relation_task_id = #{id}
+    </select>
+
+    <select id="getTaskWithScoreList" resultType="com.practice.common.dto.TaskWithScore">
+        select ti.*,
+            (select tg.score from task_grade tg where tg.relation_task_id = ti.id and tg.relation_student_id = #{StudentId}) score
+        from task_info ti
+        <where>
+            ti.task_status != 0
+            <if test="relationClassId != null">
+                and ti.relation_class_id = #{relationClassId}
+            </if>
+            <if test="key != null and key != ''">
+                and ti.task_name like concat('%',#{key},'%')
+            </if>
+        </where>
+        limit #{offset}, #{size}
+    </select>
+
+    <select id="getTaskWithListCount" resultType="java.lang.Integer">
+        select count(ti.id) from task_info ti
+        <where>
+            ti.task_status != 0
+            <if test="relationClassId != null">
+                and ti.relation_class_id = #{relationClassId}
+            </if>
+            <if test="key != null and key != ''">
+                and ti.task_name like concat('%',#{key},'%')
+            </if>
+        </where>
+    </select>
+</mapper>

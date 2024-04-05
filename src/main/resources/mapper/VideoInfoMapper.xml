@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.practice.mapper.VideoInfoMapper">
+
+    <select id="getListPage" resultType="com.practice.common.dto.VideoDto">
+        select vi.*,si.student_name from video_info vi
+        left join student_info si on si.relation_user_id = vi.created_by
+        <where>
+            vi.is_deleted = 0
+            <if test="relationClassId != null">
+                and vi.relation_class_id = #{relationClassId}
+            </if>
+            <if test="userId != null">
+                and vi.created_by = #{userId}
+            </if>
+            <if test="key != null and key != ''">
+                and vi.title like concat('%',#{key},'%')
+            </if>
+            <if test="teacherId != null and relationClassId == null">
+                and vi.relation_class_id in (
+                    select id from class_info
+                    where relation_teacher_id = #{teacherId}
+                )
+            </if>
+        </where>
+        order by vi.created_time
+        limit #{offset}, #{size}
+    </select>
+
+    <select id="getListPageCount" resultType="java.lang.Integer">
+        select COUNT(*) from video_info vi
+        left join student_info si on si.relation_user_id = vi.created_by
+        <where>
+            vi.is_deleted = 0
+            <if test="relationClassId != null">
+                and vi.relation_class_id = #{relationClassId}
+            </if>
+            <if test="userId != null">
+                and vi.created_by = #{userId}
+            </if>
+            <if test="key != null and key != ''">
+                and vi.title like concat('%',#{key},'%')
+            </if>
+            <if test="teacherId != null and relationClassId == null">
+                and vi.relation_class_id in (
+                select id from class_info
+                where relation_teacher_id = #{teacherId}
+                )
+            </if>
+        </where>
+    </select>
+</mapper>
